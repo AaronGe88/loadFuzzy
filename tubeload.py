@@ -1,5 +1,6 @@
 from odbAccess import *
 import matlab.engine
+import math
 def loadPost (index):
 	jobname = 'Job-'+str(index)+'.odb'
 	stepname = 'Step-'+str(index)
@@ -44,25 +45,26 @@ def loadPost (index):
 	normals = []
 	for slide in slideList:
 		mxSlide = matlab.double(slide)
-		s = eng.area(mxSlide)
+		s = eng.mxArea(mxSlide)
 
 		slideArea.append(s)
-		axialPos = eng.distance(mxSlide)
-
+		
+		axialPos = eng.mxDistance(mxSlide)
 		axialPositions.append(axialPos)
-		nor = eng.normal(mxSlide)
-
+		
+		nor = eng.mxNormal(mxSlide)
 		normals.append(nor)
 	
-	partVolume = 0
-	for ii in range(0, 235):
-		partVolume = partVolume \
-			+ (slideArea[ii + 1] + slideArea[ii]) * (axialPositions[ii+1] - axialPositions[ii]) / 2
+	mxSA = matlab.double(slideArea)
+	mxAP = matlab.double(axialPositions)
+	mxNm = matlab.double(normals)
+	partVolume = eng.mxVolume(mxSA, mxAP, mxNm)
+	
 	print partVolume
 	mxEvol = matlab.double(volume)
 	mxThickness = matlab.double(thickness)
-	sa = eng.shellArea(mxEvol, mxThickness)
-	print sa
-	ratio = sa / partVolume
+	sa = eng.mxShellArea(mxEvol, mxThickness)
+	
+	ratio = sa / float (partVolume)
 	print ratio
 	eng.quit()

@@ -1,4 +1,4 @@
-function [ area ] = area( slide )
+function [ area ] = mxArea( slide )
 %LoadCalculate 
 %   inputs: slide
     x = slide(:, 1);
