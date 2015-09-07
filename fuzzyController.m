@@ -19,25 +19,26 @@ function [ dR ] = fuzzyController(feathers)
 		% thDt = 0.1;
 		% thDisp = 0.2
 	% end
+    thinning = ThinIndictor(dT,flsd);
 	alphaDw = 0.1699 * 0.015;
 	alphaDt = 0.1699 * thDt;
-    dPressure = newfis('pressure');
+    dPressure = newfis('pressure increase');
     dPressure = addvar(dPressure,'input','wrinkle',[0.249,0.269]);
     dPressure = addmf(dPressure,'input',1,'decrease','gaussmf', [alphaDw, 0.249]);
     dPressure = addmf(dPressure,'input',1,'remain','gaussmf', [alphaDw, 0.2595]);
     dPressure = addmf(dPressure,'input',1,'increase','gaussmf', [alphaDw, 0.269]); 
     
-    dPressure = addvar(dPressure, 'input', 'thickness',[-0.1, 0]);
-    dPressure = addmf(dPressure, 'input', 2, 'decrease', 'gaussmf', [0.01699, -0.1]);
-    dPressure = addmf(dPressure, 'input', 2, 'remain', 'gaussmf', [0.01699, -0.05]);
-    dPressure = addmf(dPressure, 'input', 2, 'increase', 'gaussmf',  [0.01699, 0]);
+    dPressure = addvar(dPressure, 'input', 'thinning',[0, 1]);
+    dPressure = addmf(dPressure, 'input', 2, 'small', 'gaussmf', [0.1699, 0]);
+    dPressure = addmf(dPressure, 'input', 2, 'normal', 'gaussmf', [0.1699, 0.5]);
+    dPressure = addmf(dPressure, 'input', 2, 'large', 'gaussmf',  [0.1699, 1]);
     
 	alphaPre = 0.1699 * (pressup -presslow);
     dPressure = addvar(dPressure, 'output' ,'Pressure',[presslow, pressup]);
     dPressure = addmf(dPressure, 'output', 1,'decrease','gaussmf', [alphaPre, presslow]);
     dPressure = addmf(dPressure,'output',1,'remain','gaussmf', [alphaPre, (presslow +pressup) /2 ]);
     dPressure = addmf(dPressure, 'output',1,'increase','gaussmf', [alphaPre, pressup]);
-    dPRules = [1,1,1,1,1;1,2,1,1,1;1,3,1,1,1,;2,1,2,1,1;2,2,2,1,1;2,3,1,1,1;3,1,3,1,1;3,2,2,1,1;3,3,1,1,1];
+    dPRules = [1,1,2,1,1;1,2,1,1,1;1,3,1,1,1,;2,1,2,1,1;2,2,2,1,1;2,3,1,1,1;3,1,3,1,1;3,2,2,1,1;3,3,1,1,1];
     dPressure = addrule(dPressure,dPRules);
     
     in = [dW, dT];
@@ -49,19 +50,20 @@ function [ dR ] = fuzzyController(feathers)
     dFeed = addmf(dFeed,'input',1,'remain','gaussmf', [alphaDw, 0.2595]);
     dFeed = addmf(dFeed,'input',1,'increase','gaussmf', [alphaDw, 0.269]); 
     
-    dFeed = addvar(dFeed, 'input', 'thickness',[-0.1, 0]);
-    dFeed = addmf(dFeed, 'input', 2, 'decrease', 'gaussmf', [0.01699, -0.1]);
-    dFeed = addmf(dFeed, 'input', 2, 'remain', 'gaussmf', [0.01699, 0.05]);
-    dFeed = addmf(dFeed, 'input', 2, 'increase', 'gaussmf',  [0.01699, 0.0]);
+    dFeed = addvar(dFeed, 'input', 'thinning',[0, 1.0]);
+    dFeed = addmf(dFeed, 'input', 2, 'small', 'gaussmf', [0.1699, 0]);
+    dFeed = addmf(dFeed, 'input', 2, 'remain', 'gaussmf', [0.1699, 0.5]);
+    dFeed = addmf(dFeed, 'input', 2, 'increase', 'gaussmf',  [0.1699, 1]);
     
-    dFeed = addvar(dFeed, 'output' ,'Pressure',[feedlow, feedup]);
+    dFeed = addvar(dFeed, 'output' ,'Feed',[feedlow, feedup]);
 	
 	alpha = 0.1699 * (feedup - feedlow);
     dFeed = addmf(dFeed, 'output', 1,'decrease','gaussmf', [alpha, feedlow]);
     dFeed = addmf(dFeed,'output',1,'remain','gaussmf',  [alpha, (feedup+feedlow)/2]);
     dFeed = addmf(dFeed, 'output',1,'increase','gaussmf',  [alpha, feedup]);
-    dFRules = [1,1,3,1,1;1,2,3,1,1;1,3,3,1,1;2,1,2,1,1;2,2,2,1,1;2,3,2,1,1;3,1,1,1,1;3,2,1,1,1;3,3,1,1,1];
+    dFRules = [1,1,3,1,1;1,2,3,1,1;1,3,3,1,1;2,1,1,1,1;2,2,2,1,1;2,3,3,1,1;3,1,1,1,1;3,2,1,1,1;3,3,3,1,1];
     dFeed = addrule(dFeed,dFRules);
+    gensurf(dFeed);
     df = evalfis(in,dFeed); 
     
     
